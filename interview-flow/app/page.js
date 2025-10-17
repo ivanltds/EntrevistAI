@@ -10,7 +10,7 @@ export default function Home() {
   const [modelos, setModelos] = useState([]);
   const router = useRouter();
 
-  // 🔁 Carrega pautas salvas
+  // 🔁 Carrega modelos de pautas salvos
   useEffect(() => {
     const stored = localStorage.getItem("modelosPautas");
     if (stored) setModelos(JSON.parse(stored));
@@ -19,7 +19,7 @@ export default function Home() {
   // ➕ Adicionar pauta principal
   const addPauta = () => {
     if (!pautaInput.trim()) return;
-    setPautas([...pautas, { name: pautaInput, subpautas: [] }]);
+    setPautas([...pautas, { name: pautaInput.trim(), subpautas: [] }]);
     setPautaInput("");
   };
 
@@ -33,7 +33,7 @@ export default function Home() {
     const text = subInput[index]?.trim();
     if (!text) return;
     const newPautas = [...pautas];
-    newPautas[index].subpautas.push({ name: text });
+    newPautas[index].subpautas.push({ name: text, completa: false });
     setPautas(newPautas);
     setSubInput({ ...subInput, [index]: "" });
   };
@@ -71,11 +71,9 @@ export default function Home() {
         return;
       }
 
-      // Atualiza a pauta existente
       novosModelos[existenteIndex] = { tipo: tipoPauta, pautas };
       alert("Pauta atualizada com sucesso! ✅");
     } else {
-      // Cria nova pauta
       novosModelos.push({ tipo: tipoPauta, pautas });
       alert("Pauta salva com sucesso! 🎯");
     }
@@ -90,16 +88,31 @@ export default function Home() {
     setPautas(modelo.pautas);
   };
 
-  // ▶️ Iniciar entrevista
+  // ▶️ Iniciar entrevista (compatível com nova Interview)
   const startInterview = () => {
     if (!pautas.length) return alert("Adicione pelo menos uma pauta.");
-    localStorage.setItem("pautasAtuais", JSON.stringify({ tipoPauta, pautas }));
+    if (!tipoPauta.trim()) return alert("Informe o tipo da pauta.");
+
+    const estrutura = {
+      tipo: tipoPauta,
+      pautas: pautas.map((p) => ({
+        name: p.name,
+        completa: false,
+        subpautas: (p.subpautas || []).map((s) => ({
+          name: s.name,
+          completa: false,
+        })),
+      })),
+    };
+
+    // 🔹 Salva no localStorage no formato que a nova Interview espera
+    localStorage.setItem("pautas", JSON.stringify(estrutura));
     router.push("/interview");
   };
 
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col items-center p-6">
-      <h1 className="text-2xl font-bold mb-4">🎙️ InterviewFlow</h1>
+      <h1 className="text-3xl font-bold mb-6">🎙️ InterviewFlow</h1>
 
       {/* Tipo de pauta */}
       <div className="w-full max-w-md mb-4">
@@ -122,7 +135,7 @@ export default function Home() {
         />
         <button
           onClick={addPauta}
-          className="bg-blue-600 text-white px-4 rounded-lg"
+          className="bg-blue-600 text-white px-4 rounded-lg hover:bg-blue-700"
         >
           +
         </button>
@@ -142,7 +155,7 @@ export default function Home() {
               </button>
             </div>
 
-            {/* Subpautas */}
+            {/* Adicionar subpauta */}
             <div className="flex gap-2 mb-2">
               <input
                 value={subInput[i] || ""}
@@ -154,7 +167,7 @@ export default function Home() {
               />
               <button
                 onClick={() => addSubpauta(i)}
-                className="bg-green-600 text-white px-3 rounded-lg"
+                className="bg-green-600 text-white px-3 rounded-lg hover:bg-green-700"
               >
                 +
               </button>
@@ -184,7 +197,7 @@ export default function Home() {
       <div className="flex gap-3 mb-6">
         <button
           onClick={salvarModelo}
-          className="bg-purple-600 text-white px-4 py-2 rounded-lg"
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700"
         >
           💾 Salvar Pauta
         </button>
@@ -192,7 +205,7 @@ export default function Home() {
         {pautas.length > 0 && (
           <button
             onClick={startInterview}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
           >
             ▶️ Iniciar Entrevista
           </button>
@@ -212,7 +225,7 @@ export default function Home() {
                 <span>{m.tipo}</span>
                 <button
                   onClick={() => carregarModelo(m)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm"
+                  className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600"
                 >
                   Carregar
                 </button>
