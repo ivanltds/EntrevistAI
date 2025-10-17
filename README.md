@@ -117,7 +117,7 @@ B3 --> B4[✅ Atualização visual\nSubpautas completas = verde]
 B4 --> B5[💬 Transcrição acumulada na tela]
 B5 --> C1[🟥 Finalizar entrevista]
 C1 --> C2[🪶 /api/summarize\nGera resumo e ata]
-C2 --> C3[📋 Tabela final: Pauta | Subpauta | Resumo]
+C2 --> C3[📋 Tabela final: "Pauta" &#124; "Subpauta" &#124; "Resumo"]
 C3 --> C4[🎯 Fim da entrevista]
 ```
 
