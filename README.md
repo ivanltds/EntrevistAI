@@ -108,16 +108,16 @@ OPENAI_API_KEY=sk-xxxxx
 
 ```mermaid
 flowchart TD
-A1[🏠 /page.js\nCriação de pautas] --> A2[💾 Salvar modelo no localStorage]
+A1[🏠 /page.js - Criação de pautas] --> A2[💾 Salvar modelo no localStorage]
 A2 --> A3[▶️ Iniciar entrevista]
-A3 --> B1[🎙️ /interview/page.js\nGravação e Transcrição]
-B1 --> B2[🧠 /api/transcribe\nÁudio → Texto]
-B2 --> B3[📊 /api/analyze\nAnálise das pautas]
-B3 --> B4[✅ Atualização visual\nSubpautas completas = verde]
+A3 --> B1[🎙️ /interview/page.js - Gravação e Transcrição]
+B1 --> B2[🧠 /api/transcribe - Áudio para texto]
+B2 --> B3[📊 /api/analyze - Análise das pautas]
+B3 --> B4[✅ Atualização visual - Subpautas completas ficam verdes]
 B4 --> B5[💬 Transcrição acumulada na tela]
 B5 --> C1[🟥 Finalizar entrevista]
-C1 --> C2[🪶 /api/summarize\nGera resumo e ata]
-C2 --> C3[📋 Tabela final: "Pauta" &#124; "Subpauta" &#124; "Resumo"]
+C1 --> C2[🪶 /api/summarize - Gera resumo e ata]
+C2 --> C3[📋 Tabela final: Pauta / Subpauta / Resumo]
 C3 --> C4[🎯 Fim da entrevista]
 ```
 
