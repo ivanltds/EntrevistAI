@@ -1,47 +1,99 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [themes, setThemes] = useState([]);
-  const [themeInput, setThemeInput] = useState("");
+  const [tipoPauta, setTipoPauta] = useState("");
+  const [pautas, setPautas] = useState([]);
+  const [pautaInput, setPautaInput] = useState("");
   const [subInput, setSubInput] = useState({});
+  const [modelos, setModelos] = useState([]);
   const router = useRouter();
 
-  // Adiciona tema principal
-  const addTheme = () => {
-    if (!themeInput.trim()) return;
-    setThemes([...themes, { name: themeInput, subthemes: [] }]);
-    setThemeInput("");
+  // 🔁 Carrega pautas salvas
+  useEffect(() => {
+    const stored = localStorage.getItem("modelosPautas");
+    if (stored) setModelos(JSON.parse(stored));
+  }, []);
+
+  // ➕ Adicionar pauta principal
+  const addPauta = () => {
+    if (!pautaInput.trim()) return;
+    setPautas([...pautas, { name: pautaInput, subpautas: [] }]);
+    setPautaInput("");
   };
 
-  // Remove tema
-  const removeTheme = (index) => {
-    setThemes(themes.filter((_, i) => i !== index));
+  // ❌ Remover pauta
+  const removePauta = (index) => {
+    setPautas(pautas.filter((_, i) => i !== index));
   };
 
-  // Adiciona subtema a um tema
-  const addSubtheme = (index) => {
+  // ➕ Adicionar subpauta
+  const addSubpauta = (index) => {
     const text = subInput[index]?.trim();
     if (!text) return;
-    const newThemes = [...themes];
-    newThemes[index].subthemes.push({ name: text });
-    setThemes(newThemes);
+    const newPautas = [...pautas];
+    newPautas[index].subpautas.push({ name: text });
+    setPautas(newPautas);
     setSubInput({ ...subInput, [index]: "" });
   };
 
-  // Remove subtema
-  const removeSubtheme = (themeIndex, subIndex) => {
-    const newThemes = [...themes];
-    newThemes[themeIndex].subthemes = newThemes[themeIndex].subthemes.filter(
+  // ❌ Remover subpauta
+  const removeSubpauta = (pautaIndex, subIndex) => {
+    const newPautas = [...pautas];
+    newPautas[pautaIndex].subpautas = newPautas[pautaIndex].subpautas.filter(
       (_, i) => i !== subIndex
     );
-    setThemes(newThemes);
+    setPautas(newPautas);
   };
 
-  // Iniciar entrevista
+  // 💾 Salvar modelo de pauta (com verificação de sobrescrita)
+  const salvarModelo = () => {
+    if (!tipoPauta.trim() || pautas.length === 0) {
+      alert("Informe o tipo de pauta e adicione pelo menos uma pauta.");
+      return;
+    }
+
+    const stored = localStorage.getItem("modelosPautas");
+    let novosModelos = stored ? JSON.parse(stored) : [];
+
+    const existenteIndex = novosModelos.findIndex(
+      (m) => m.tipo.toLowerCase() === tipoPauta.toLowerCase()
+    );
+
+    if (existenteIndex !== -1) {
+      const confirmar = confirm(
+        `Já existe uma pauta chamada "${tipoPauta}". Deseja sobrescrever os dados existentes?`
+      );
+
+      if (!confirmar) {
+        alert("Operação cancelada.");
+        return;
+      }
+
+      // Atualiza a pauta existente
+      novosModelos[existenteIndex] = { tipo: tipoPauta, pautas };
+      alert("Pauta atualizada com sucesso! ✅");
+    } else {
+      // Cria nova pauta
+      novosModelos.push({ tipo: tipoPauta, pautas });
+      alert("Pauta salva com sucesso! 🎯");
+    }
+
+    setModelos(novosModelos);
+    localStorage.setItem("modelosPautas", JSON.stringify(novosModelos));
+  };
+
+  // 📥 Carregar modelo existente
+  const carregarModelo = (modelo) => {
+    setTipoPauta(modelo.tipo);
+    setPautas(modelo.pautas);
+  };
+
+  // ▶️ Iniciar entrevista
   const startInterview = () => {
-    localStorage.setItem("themes", JSON.stringify(themes));
+    if (!pautas.length) return alert("Adicione pelo menos uma pauta.");
+    localStorage.setItem("pautasAtuais", JSON.stringify({ tipoPauta, pautas }));
     router.push("/interview");
   };
 
@@ -49,62 +101,73 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 flex flex-col items-center p-6">
       <h1 className="text-2xl font-bold mb-4">🎙️ InterviewFlow</h1>
 
-      {/* Campo para novo tema */}
+      {/* Tipo de pauta */}
+      <div className="w-full max-w-md mb-4">
+        <label className="block mb-1 font-medium">Tipo de pauta</label>
+        <input
+          value={tipoPauta}
+          onChange={(e) => setTipoPauta(e.target.value)}
+          placeholder="Ex: Entrevista de Acolhimento"
+          className="w-full border border-gray-300 rounded-lg p-2"
+        />
+      </div>
+
+      {/* Campo para nova pauta */}
       <div className="flex gap-2 w-full max-w-md mb-4">
         <input
-          value={themeInput}
-          onChange={(e) => setThemeInput(e.target.value)}
-          placeholder="Adicionar tema"
+          value={pautaInput}
+          onChange={(e) => setPautaInput(e.target.value)}
+          placeholder="Adicionar pauta"
           className="flex-1 border border-gray-300 rounded-lg p-2"
         />
         <button
-          onClick={addTheme}
+          onClick={addPauta}
           className="bg-blue-600 text-white px-4 rounded-lg"
         >
           +
         </button>
       </div>
 
-      {/* Lista de temas e subtemas */}
-      <div className="w-full max-w-md flex flex-col gap-3">
-        {themes.map((t, i) => (
+      {/* Lista de pautas e subpautas */}
+      <div className="w-full max-w-md flex flex-col gap-3 mb-4">
+        {pautas.map((p, i) => (
           <div key={i} className="bg-white p-4 rounded-lg shadow-sm">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="font-semibold">{t.name}</h2>
+              <h2 className="font-semibold">{p.name}</h2>
               <button
-                onClick={() => removeTheme(i)}
+                onClick={() => removePauta(i)}
                 className="text-red-500 font-bold"
               >
                 ×
               </button>
             </div>
 
-            {/* Subtemas */}
+            {/* Subpautas */}
             <div className="flex gap-2 mb-2">
               <input
                 value={subInput[i] || ""}
                 onChange={(e) =>
                   setSubInput({ ...subInput, [i]: e.target.value })
                 }
-                placeholder="Adicionar subtema"
+                placeholder="Adicionar subpauta"
                 className="flex-1 border border-gray-300 rounded-lg p-2"
               />
               <button
-                onClick={() => addSubtheme(i)}
+                onClick={() => addSubpauta(i)}
                 className="bg-green-600 text-white px-3 rounded-lg"
               >
                 +
               </button>
             </div>
 
-            {/* Lista de subtemas */}
-            {t.subthemes.length > 0 && (
+            {/* Lista de subpautas */}
+            {p.subpautas.length > 0 && (
               <ul className="ml-3 list-disc text-gray-700">
-                {t.subthemes.map((s, j) => (
+                {p.subpautas.map((s, j) => (
                   <li key={j} className="flex justify-between items-center">
                     <span>{s.name}</span>
                     <button
-                      onClick={() => removeSubtheme(i, j)}
+                      onClick={() => removeSubpauta(i, j)}
                       className="text-red-400 text-sm"
                     >
                       ×
@@ -117,14 +180,46 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Botão iniciar entrevista */}
-      {themes.length > 0 && (
+      {/* Botões principais */}
+      <div className="flex gap-3 mb-6">
         <button
-          onClick={startInterview}
-          className="mt-6 bg-green-600 text-white px-6 py-2 rounded-lg"
+          onClick={salvarModelo}
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg"
         >
-          Iniciar Entrevista
+          💾 Salvar Pauta
         </button>
+
+        {pautas.length > 0 && (
+          <button
+            onClick={startInterview}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg"
+          >
+            ▶️ Iniciar Entrevista
+          </button>
+        )}
+      </div>
+
+      {/* Modelos salvos */}
+      {modelos.length > 0 && (
+        <div className="w-full max-w-md">
+          <h3 className="font-semibold mb-2">📚 Pautas Salvas</h3>
+          <ul className="flex flex-col gap-2">
+            {modelos.map((m, i) => (
+              <li
+                key={i}
+                className="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center"
+              >
+                <span>{m.tipo}</span>
+                <button
+                  onClick={() => carregarModelo(m)}
+                  className="bg-blue-500 text-white px-3 py-1 rounded-lg text-sm"
+                >
+                  Carregar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </main>
   );
